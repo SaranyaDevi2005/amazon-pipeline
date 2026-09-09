@@ -1,0 +1,17 @@
+bundle:
+  name: amazon-pipeline
+
+resources:
+  jobs:
+    unit_tests_job:
+      name: amazon-pipeline-unit-tests
+      tasks:
+        - task_key: run_unit_tests
+          notebook_task:
+            notebook_path: /Workspace/Users/71762233042@cit.edu.in/amazon-pipeline/Amazon_Pipeline_Unit_Tests
+
+targets:
+  dev:
+    default: true
+    workspace:
+      host: https://dbc-28f616d1-12f0.cloud.databricks.com
