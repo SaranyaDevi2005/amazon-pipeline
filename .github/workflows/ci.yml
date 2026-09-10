@@ -1,18 +1,44 @@
-name: Databricks CI
+name: Databricks CI/CD
 
 on:
   pull_request:
     branches: [main]
+
   push:
     branches: [main]
 
 jobs:
-  run-tests:
+  deploy-and-test:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Trigger Databricks test job
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Databricks CLI
+        uses: databricks/setup-cli@main
+
+      - name: Validate Databricks Bundle
+        env:
+          DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
+          DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
+        run: |
+          databricks bundle validate -t dev
+
+      - name: Deploy Databricks Bundle
+        env:
+          DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
+          DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
+        run: |
+          databricks bundle deploy -t dev
+
+      - name: Run Unit Tests
+        env:
+          DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
+          DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
         run: |
           curl -s -X POST \
-            -H "Authorization: Bearer ${{ secrets.DATABRICKS_TOKEN }}" \
-            "${{ secrets.DATABRICKS_HOST }}/api/2.1/jobs/run-now" \
-            -d '{"job_id": ${{ secrets.DATABRICKS_JOB_ID }}}'
+            -H "Authorization: Bearer $DATABRICKS_TOKEN" \
+            -H "Content-Type: application/json" \
+            "$DATABRICKS_HOST/api/2.1/jobs/run-now" \
+            -d "{\"job_id\": ${{ secrets.DATABRICKS_JOB_ID }}}"
